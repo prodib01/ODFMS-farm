@@ -1,0 +1,215 @@
+.monitoring-container{
+      width: 100%;
+  padding: 20px;
+  box-sizing: border-box;
+  overflow-x: auto;
+    display: flex;
+  flex-direction: column;
+}
+
+.table-wrapper {
+  width: 100%;
+  overflow-x: auto; 
+}
+
+.add-staff-btn-container {
+  text-align: right;
+  margin-bottom: 20px;
+}
+
+@media (max-width: 768px) {
+  .add-staff-btn-container {
+    text-align: center;
+    margin-bottom: 10px;
+  }
+}
+
+.add-staff-btn {
+  padding: 10px 20px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.add-staff-btn:hover {
+  background-color: #0056b3;
+}
+
+@media (max-width: 768px) {
+  .add-staff-btn {
+    width: 100%;
+    font-size: 16px;
+    padding: 12px;
+  }
+}
+
+.cow-table {
+  width: 100%;
+  max-width: 1600px; 
+  margin: 0 auto; 
+  border-collapse: collapse;
+  table-layout: fixed; 
+}
+
+.cow-table th,
+.cow-table td {
+  padding: 10px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+  word-wrap: break-word; 
+}
+
+.cow-table th {
+  background-color: #f8f8f8;
+}
+
+.cow-table td {
+  white-space: wrap; 
+}
+
+.action-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  margin-right: 5px;
+}
+
+.edit-btn {
+  color: #28a745;
+}
+
+.delete-btn {
+  color: #dc3545;
+}
+
+.view-btn{
+    color: #0056b3;
+}
+
+@media (max-width: 768px) {
+  .cow-table th, .cow-table td {
+    padding: 10px;
+    font-size: 14px;
+  }
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+  margin-bottom: 20px;
+  flex-wrap: wrap; /* Allow pagination buttons to wrap */
+}
+
+.page-btn {
+  padding: 5px 10px;
+  margin: 0 2px;
+  border: 1px solid #ddd;
+  background-color: #f8f8f8;
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.page-btn.active {
+  background-color: #007bff;
+  color: white;
+}
+
+.page-btn:hover:not(.active) {
+  background-color: #ddd;
+}
+
+@media (max-width: 768px) {
+  .page-btn {
+    margin: 2px;
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .monitoring-container {
+    padding: 10px;
+  }
+
+  .cow-table th, .cow-table td {
+    padding: 6px;
+    font-size: 12px;
+  }
+
+  .add-staff-btn {
+    padding: 10px;
+    font-size: 14px;
+  }
+
+  .action-btn {
+    font-size: 14px;
+  }
+
+  .page-btn {
+    padding: 6px 10px;
+    font-size: 10px;
+  }
+}
+
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: gray;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-content {
+  background-color: #f2f2f2;
+  padding: 20px;
+  border-radius: 5px;
+  width: 80%;
+  max-width: 600px;
+}
+
+.close-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  cursor: pointer;
+  font-size: 1.5rem;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+}
+
+.form-group input,
+.form-group select {
+  width: calc(100% - 16px); 
+  padding: 8px;
+  box-sizing: border-box;
+}
+
+.submit-button {
+  background-color: #4caf50;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.submit-button:hover {
+  background-color: #45a049;
+}

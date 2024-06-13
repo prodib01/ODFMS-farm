@@ -1,0 +1,108 @@
+
+.event-date {
+  background-color: #ffcc00; /* Highlight color for event dates */
+  color: #000; /* Text color for better contrast */
+}
+.calendar {
+  display: flex;
+  flex-direction: column;
+}
+
+.first {
+  display: flex;
+  flex-direction: row;
+  border: 1px solid black;
+}
+
+.cal {
+  border: 1px solid green;
+}
+
+.upcoming-events {
+  border: 1px solid red;
+}
+
+.second {
+  border: 1px solid blue;
+}
+
+.add-btn-container {
+  display: flex;
+  justify-content: flex-end; /* Push button to the right */
+  margin-bottom: 10px;
+}
+
+.add-btn {
+  padding: 8px 16px;
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+}
+
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 10px;
+}
+
+th,
+td {
+  border: 1px solid #ddd;
+  padding: 6px;
+  text-align: left;
+}
+
+th {
+  background-color: #f2f2f2;
+}
+
+tr:nth-child(even) {
+  background-color: #f2f2f2;
+}
+
+.actions button {
+  margin-right: 5px;
+  padding: 5px 10px;
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.actions button:hover {
+  background-color: #0056b3;
+}
+
+/* Calendar.css */
+
+/* Pagination styles */
+.pagination {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.pagination .btn {
+  background-color: #f1f1f1;
+  border: 1px solid #ccc;
+  color: #333;
+  padding: 6px 16px;
+  margin: 0 5px;
+  cursor: pointer;
+  border-radius: 18px;
+  transition: background-color 0.3s;
+}
+
+.pagination .btn:hover {
+  background-color: #ddd;
+}
+
+.pagination .btn.active {
+  background-color: #007bff;
+  color: #fff;
+  border-color: #007bff;
+}
+
