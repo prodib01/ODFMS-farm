@@ -25,6 +25,7 @@ const Production = () => {
     quantity: "",
     buyer: ""
   });
+
   const [productData, setProductData] = useState({ product_name: "" });
   const [products, setProducts] = useState([]);
   const [showDropdown, setShowDropdown] = useState(false);
@@ -47,36 +48,13 @@ const Production = () => {
   }, []);
 
   useEffect(() => {
-    const initialYear = milkDate.getFullYear();
-    const initialMonth = milkDate.getMonth() + 1;
-    fetchWeeklySales(initialYear, initialMonth);
-  }, [milkDate]);
-
-  useEffect(() => {
     const initialYear = selectedDate.getFullYear();
     const initialMonth = selectedDate.getMonth() + 1;
     fetchWeeklySales(initialYear, initialMonth);
+    fetchWeeklyMilk(initialYear, initialMonth);
   }, [selectedDate]);
-
-  const fetchWeeklyMilk = async (year, month) => {
-    try {
-      const response = await fetch(`http://localhost/8080/milk/getweeklymilk/${year}/${month}`);
-      if (response.ok) {
-        const data = await response.json();
-        if (data.length === 0) {
-          console.log("No milk production this month");
-          setWeeklyMilk([]);
-        } else {
-          console.log("Weekly Milk:", data);
-          setWeeklyMilk(data);
-        }
-      } else {
-        console.error("Failed to fetch weekly milk records:", response.statusText);
-      }
-    } catch (error) {
-      console.error("Error fetching records:", error);
-    }
-  };
+  console.log("Weekly Sales:", weeklySales);
+  console.log("Weekly Milk:", weeklyMilk);
 
   const fetchMilkProduction = async () => {
     try {
@@ -133,25 +111,74 @@ const Production = () => {
   };
 
   const fetchWeeklySales = async (year, month) => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      console.error("No token found, please log in again.");
+      return;
+    }
+
     try {
-      const response = await fetch(`http://localhost:8080/sales/getweeklysales/${year}/${month}`);
+      const response = await fetch(`http://localhost:8080/sales/getweeklysales/${year}/${month}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      if (response.status === 401) {
+        console.error("Unauthorized: Please check your token or login again.");
+        alert("Unauthorized access. Please log in again.");
+        // Redirect to login page or handle re-authentication
+        return;
+      }
 
       if (response.ok) {
         const data = await response.json();
-        if (data.length === 0) {
-          console.log("No sales data for this month");
-          setWeeklySales([]);
-        } else {
-          console.log("Weekly sales data:", data);
-          setWeeklySales(data);
-        }
+        console.log("Weekly Sales:", data);
+        setWeeklySales(data);
       } else {
-        console.error("Failed to fetch weekly sales data:", response.statusText);
+        console.error(
+          `Failed to fetch weekly sales data: ${response.status} ${response.statusText}`
+        );
       }
     } catch (error) {
       console.error("Error fetching weekly sales data:", error);
     }
   };
+
+    const fetchWeeklyMilk = async (year, month) => {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        console.error("No token found, please log in again.");
+        return;
+      }
+
+      try {
+        const response = await fetch(`http://localhost:8080/milk/getweeklymilk/${year}/${month}`, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+
+        if (response.status === 401) {
+          console.error("Unauthorized: Please check your token or login again.");
+          alert("Unauthorized access. Please log in again.");
+          // Handle re-authentication or redirect
+          return;
+        }
+
+        if (response.ok) {
+          const data = await response.json();
+          console.log("Weekly Milk:", data);
+          setWeeklyMilk(data);
+        } else {
+          console.error(
+            `Failed to fetch weekly milk data: ${response.status} ${response.statusText}`
+          );
+        }
+      } catch (error) {
+        console.error("Error fetching weekly milk data:", error);
+      }
+    };
 
   // Handle Actions
   const handleButtonClick = () => {
@@ -241,14 +268,12 @@ const Production = () => {
     const year = date.getFullYear();
     const month = date.getMonth() + 1;
     fetchWeeklySales(year, month);
+    fetchWeeklyMilk(year, month); 
   };
 
-  const handleMilkDate = (date) => {
-    setMilkDate(date);
-    const year = date.getFullYear();
-    const month = date.getMonth() + 1;
-    fetchWeeklyMilk(year, month);
-  };
+    const handleMilkDateChange = (date) => {
+      setMilkDate(date);
+    };
 
   // Render Modal Content
   const renderModalContent = () => {
@@ -374,23 +399,6 @@ const Production = () => {
     }
   };
 
-  const generateLineGraph = (weeklyMilk) => {
-    const labels = weeklyMilk.map((week) => `Week ${week.week_of_month}`);
-    const data = weeklyMilk.map((week) => parseFloat(week.total_quantity));
-    return {
-      labels: labels,
-      datasets: [
-        {
-          label: "Weekly Milk Production",
-          data: data,
-          fill: false,
-          borderColor: "rgb(75, 192, 192)",
-          tension: 0.1
-        }
-      ]
-    };
-  };
-
   const generateLineChartData = (weeklySalesData) => {
     const labels = weeklySalesData.map((week) => `Week ${week.week_of_month}`);
     const data = weeklySalesData.map((week) => parseFloat(week.total_sales));
@@ -400,6 +408,24 @@ const Production = () => {
       datasets: [
         {
           label: "Weekly Sales",
+          data: data,
+          fill: false,
+          borderColor: "rgb(75, 192, 192)",
+          tension: 0.1
+        }
+      ]
+    };
+  };
+
+  const generateMilkChartData = (weeklyMilkData) => {
+    const labels = weeklyMilkData.map((week) => `Week ${week.week_of_month}`);
+    const data = weeklyMilkData.map((week) => parseFloat(week.total_quantity));
+
+    return {
+      labels: labels,
+      datasets: [
+        {
+          label: "Weekly Milk Production",
           data: data,
           fill: false,
           borderColor: "rgb(75, 192, 192)",
@@ -431,12 +457,20 @@ const Production = () => {
   // Render Component
   return (
     <div className="production-container">
-      <div style={{ position: "absolute", marginTop: "10px", right: "10px" }}>
+      <div style={{ textAlign: "center", marginBottom: "10px" }}>
         <DropdownButton
           align="end"
           title="Add Records"
           id="dropdown-menu-align-end"
           show={showDropdown}
+          style={{
+            padding: "10px 20px",
+            color: "white",
+            borderRadius: "4px",
+            border: "none",
+            cursor: "pointer",
+            fontSize: "14px"
+          }}
           onClick={handleButtonClick}>
           <Dropdown.Item onClick={() => handleOptionClick("milk")}>Milk</Dropdown.Item>
           <Dropdown.Item onClick={() => handleOptionClick("sales")}>Sales</Dropdown.Item>
@@ -456,7 +490,7 @@ const Production = () => {
 
       <div className="first-container">
         <CSSTransition in={!!salesSummary} timeout={300} classNames="fade" unmountOnExit>
-          <div className="category-card">
+          <div className="categor-card">
             <div className="category-content">
               {salesSummary ? (
                 <>
@@ -481,7 +515,7 @@ const Production = () => {
         </CSSTransition>
 
         <CSSTransition in={!!products.length} timeout={300} classNames="fade" unmountOnExit>
-          <div className="category-card">
+          <div className="categor-card">
             <h4>Total Products</h4>
             <div className="category-content">
               <p>{animatedProductCount} products</p>
@@ -490,7 +524,7 @@ const Production = () => {
         </CSSTransition>
 
         <CSSTransition in={!!milkProduction} timeout={300} classNames="fade" unmountOnExit>
-          <div className="category-card">
+          <div className="categor-card">
             <div className="category-content">
               <h3>
                 {milkProductionDate
@@ -527,18 +561,19 @@ const Production = () => {
         <div className="line-graph">
           <div className="filter-container">
             <DatePicker
-              selected={milkDate}
-              onChange={handleMilkDate}
+              selected={selectedDate}
+              onChange={handleDateChange}
               dateFormat="MM/yyyy"
               showMonthYearPicker
             />
+
           </div>
           <div className="chart-container">
             {weeklyMilk.length > 0 ? (
-              <Line data={generateLineGraph(weeklyMilk)} options={{ responsive: true }} />
-            ) : (
-              <p>No milk records for this month</p>
-            )}
+              <Line data={generateMilkChartData(weeklyMilk)} options={{ responsive: true }} />
+              ) : (
+                <p>No milk production data available for this month.</p>
+              )}
           </div>
         </div>
       </div>
