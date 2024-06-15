@@ -29,7 +29,7 @@ const Monitoring = () => {
       treatmentgiven: ""
     });
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(10);
+  const [itemsPerPage] = useState(8);
   const token = localStorage.getItem("token");
 
   const fetchCowData = useCallback(async () => {

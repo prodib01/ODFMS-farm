@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import Modal from "react-modal";
 import { FaEdit, FaTrash } from "react-icons/fa";
 import "../css/Breeding.css";
@@ -10,9 +10,8 @@ const Breeding = () => {
   const [cowDetails, setCowDetails] = useState({});
   const [methodDetails, setMethodDetails] = useState({});
   const [loading, setLoading] = useState(true);
-  const [record, setRecord] = useState(null);
   const [modalIsOpen, setModalIsOpen] = useState(false);
-  const [editRecord, setEditRecord] = useState(null); // State to store the record being edited
+  const [editRecord, setEditRecord] = useState(null);
   const [newRecord, setNewRecord] = useState({
     cow: "",
     breeding_date: "",
@@ -20,6 +19,8 @@ const Breeding = () => {
     pregnancy_status: false,
     due_date: ""
   });
+   const [currentPage, setCurrentPage] = useState(1);
+   const [itemsPerPage] = useState(8);
 
   const token = localStorage.getItem("token");
 
@@ -74,14 +75,11 @@ const Breeding = () => {
         }
       });
       const data = await response.json();
-
-      // Safely access the methods array within data
       const methods = data.data || [];
       const methodDetailsObject = methods.reduce((acc, method) => {
         acc[method.id] = method.method;
         return acc;
       }, {});
-
       setMethodDetails(methodDetailsObject);
     } catch (error) {
       console.error("Error fetching method details:", error);
@@ -101,117 +99,123 @@ const Breeding = () => {
   const closeModal = () => {
     setModalIsOpen(false);
     setEditRecord(null);
+    setNewRecord({
+      cow: "",
+      breeding_date: "",
+      method: "",
+      pregnancy_status: false,
+      due_date: ""
+    });
   };
 
   const handleEdit = (record) => {
     setEditRecord(record);
-    if (record) {
-      setRecord(record);
-      setNewRecord({
-        cow: record.cow,
-        breeding_date: record.breeding_date,
-        method: record.method,
-        pregnancy_status: record.pregnancy_status,
-        due_date: record.due_date
-      });
-      openModal(); // Open the modal
-    }
+    setNewRecord({
+      cow: record.cow || "",
+      breeding_date: new Date(record.breeding_date).toISOString().split("T")[0],
+      method: record.method || "",
+      pregnancy_status: record.pregnancy_status,
+      due_date: new Date(record.due_date).toISOString().split("T")[0]
+    });
+    openModal();
   };
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-
-    if (type === "radio") {
-      setNewRecord((prev) => ({
-        ...prev,
-        [name]: value === "true" ? true : false // Convert the string value to a boolean
-      }));
-    } else {
-      setNewRecord((prev) => ({
-        ...prev,
-        [name]: type === "checkbox" ? checked : value
-      }));
-    }
+    setNewRecord((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value
+    }));
   };
 
-  const updateBreedingRecord = async (updatedRecord) => {
+  const handleRadioChange = (e) => {
+    const { value } = e.target;
+    setNewRecord((prev) => ({
+      ...prev,
+      pregnancy_status: value === "true" // Convert string to boolean
+    }));
+  };
+
+const updateBreedingRecord = async (updatedRecord) => {
+  try {
+    const response = await fetch(`http://localhost:8080/breeding/updatebreeding/${editRecord.id}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify(updatedRecord)
+    });
+    const data = await response.json();
+    setBreedingRecords((prevRecords) =>
+      prevRecords.map((rec) => (rec.id === editRecord.id ? data.data : rec))
+    );
+    window.location.reload(); // Refresh the page
+  } catch (error) {
+    console.error("Error updating breeding record:", error);
+  }
+};
+
+
+const handleDelete = async (recordToDelete) => {
+  const confirmDelete = window.confirm(
+    "Are you sure you want to delete this record from the storage?"
+  );
+  if (confirmDelete) {
     try {
       const response = await fetch(
-        `http://localhost:8080/breeding/updatebreeding/${editRecord.id}`,
+        `http://localhost:8080/breeding/deletebreeding/${recordToDelete.id}`,
         {
-          method: "PATCH",
+          method: "DELETE",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`
-          },
-          body: JSON.stringify(updatedRecord)
-        }
-      );
-      const data = await response.json();
-      setBreedingRecords((prevRecords) =>
-        prevRecords.map((rec) => (rec.id === editRecord.id ? data.data : rec))
-      );
-    } catch (error) {
-      console.error("Error updating breeding record:", error);
-    }
-  };
-
-  const handleDelete = async (recordToDelete) => {
-    const confirmDelete = window.confirm(
-      "Are you sure you want to delete this record from the storage?"
-    );
-    if (confirmDelete) {
-      try {
-        const response = await fetch(
-          `http://localhost:8080/breeding/deletebreeding/${recordToDelete.id}`,
-          {
-            method: "DELETE",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`
-            }
           }
-        );
-        if (!response.ok) {
-          const data = await response.json();
-          throw new Error(data.message || "Failed to delete record");
         }
-        setBreedingRecords((prevRecords) =>
-          prevRecords.filter((rec) => rec.id !== recordToDelete.id)
-        );
-      } catch (error) {
-        console.error("Error deleting record", error);
-      }
-    }
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const formattedRecord = {
-        ...newRecord,
-        breeding_date: new Date(newRecord.breeding_date).toISOString().split("T")[0], // Convert and format date
-        due_date: new Date(newRecord.due_date).toISOString().split("T")[0] // Convert and format date
-      };
-      if (editRecord) {
-        await updateBreedingRecord(formattedRecord);
-      } else {
-        const response = await fetch("http://localhost:8080/breeding/addbreeding", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`
-          },
-          body: JSON.stringify(formattedRecord)
-        });
+      );
+      if (!response.ok) {
         const data = await response.json();
-        setBreedingRecords((prev) => [...prev, data.data]);
+        throw new Error(data.message || "Failed to delete record");
       }
-      closeModal();
+      setBreedingRecords((prevRecords) =>
+        prevRecords.filter((rec) => rec.id !== recordToDelete.id)
+      );
+      window.location.reload(); // Refresh the page
     } catch (error) {
-      console.error("Error adding/updating breeding record:", error);
+      console.error("Error deleting record", error);
     }
-  };
+  }
+};
+
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  try {
+    const formattedRecord = {
+      ...newRecord,
+      breeding_date: new Date(newRecord.breeding_date).toISOString().split("T")[0],
+      due_date: new Date(newRecord.due_date).toISOString().split("T")[0]
+    };
+    if (editRecord) {
+      await updateBreedingRecord(formattedRecord);
+    } else {
+      const response = await fetch("http://localhost:8080/breeding/addbreeding", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(formattedRecord)
+      });
+      const data = await response.json();
+      setBreedingRecords((prev) => [...prev, data.data]);
+    }
+    closeModal();
+    window.location.reload(); // Refresh the page
+  } catch (error) {
+    console.error("Error adding/updating breeding record:", error);
+  }
+};
+
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -223,54 +227,67 @@ const Breeding = () => {
 
   if (loading) return <p>Loading...</p>;
 
+    const totalPages = Math.ceil(breedingRecords.length / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const currentbreedingRecords = breedingRecords.slice(startIndex, startIndex + itemsPerPage);
+
+    const handlePageChange = (page) => {
+      if (page > 0 && page <= totalPages) {
+        setCurrentPage(page);
+      }
+    };
+
   return (
-    <div>
+    <div className="breeding-container">
       <div className="add-btn-container">
         <button className="add-btn" onClick={openModal}>
           Add Record
         </button>
       </div>
-      <h1>Breeding Records</h1>
-      <table>
-        <thead>
-          <tr>
-            <th>Cow</th>
-            <th>Breeding Date</th>
-            <th>Method</th>
-            <th>Pregnancy Status</th>
-            <th>Due Date</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {breedingRecords.map((record) => (
-            <tr key={record.id}>
-              <td>{getCowTag(record.cow)}</td>
-              <td>{formatDate(record.breeding_date)}</td>
-              <td>{getMethodName(record.method)}</td>
-              <td>{record.pregnancy_status ? "Pregnant" : "Not Pregnant"}</td>
-              <td>{formatDate(record.due_date)}</td>
-              <td>
-                <button onClick={() => handleEdit(record)}>
-                  <FaEdit />
-                </button>
-                <button onClick={() => handleDelete(record)}>
-                  <FaTrash />
-                </button>
-              </td>
+      <div className="table-wrapper">
+        <table className="breeding-table">
+          <thead>
+            <tr>
+              <th>Cow</th>
+              <th>Breeding Date</th>
+              <th>Method</th>
+              <th>Pregnancy Status</th>
+              <th>Due Date</th>
+              <th>Actions</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-
+          </thead>
+          <tbody>
+            {currentbreedingRecords.map((record) => {
+              if (!record || !record.cow || !record.id) return null; // Safeguard against undefined or incomplete records
+              return (
+                <tr key={record.id}>
+                  <td>{getCowTag(record.cow)}</td>
+                  <td>{formatDate(record.breeding_date)}</td>
+                  <td>{getMethodName(record.method)}</td>
+                  <td>{record.pregnancy_status ? "Pregnant" : "Not Pregnant"}</td>
+                  <td>{formatDate(record.due_date)}</td>
+                  <td>
+                    <button className="action-btn edit-btn" onClick={() => handleEdit(record)}>
+                      <FaEdit />
+                    </button>
+                    <button className="action-btn delete-btn" onClick={() => handleDelete(record)}>
+                      <FaTrash />
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
       <Modal
         isOpen={modalIsOpen}
         onRequestClose={closeModal}
-        contentLabel="Add Breeding Record"
+        contentLabel="Breeding Record Modal"
         style={{
           content: {
-            maxWidth: "500px", // Adjust this value as needed
-            width: "80%", // Adjust this value as needed
+            height: "500px",
+            width: "80%",
             top: "50%",
             left: "50%",
             transform: "translate(-50%, -50%)",
@@ -378,9 +395,9 @@ const Breeding = () => {
               <input
                 type="radio"
                 name="pregnancy_status"
-                value={true}
+                value="true"
                 checked={newRecord.pregnancy_status === true}
-                onChange={handleChange}
+                onChange={handleRadioChange}
                 style={{
                   marginRight: "5px"
                 }}
@@ -389,10 +406,11 @@ const Breeding = () => {
               <input
                 type="radio"
                 name="pregnancy_status"
-                value={false}
+                value="false"
                 checked={newRecord.pregnancy_status === false}
-                onChange={handleChange}
+                onChange={handleRadioChange}
                 style={{
+                  marginLeft: "10px",
                   marginRight: "5px"
                 }}
               />
@@ -432,6 +450,16 @@ const Breeding = () => {
           </button>
         </form>
       </Modal>
+      <div className="pagination">
+        {Array.from({ length: totalPages }, (_, index) => (
+          <button
+            key={index + 1}
+            onClick={() => handlePageChange(index + 1)}
+            className={`page-btn ${index + 1 === currentPage ? "active" : ""}`}>
+            {index + 1}
+          </button>
+        ))}
+      </div>
     </div>
   );
 };

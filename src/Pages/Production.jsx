@@ -457,7 +457,7 @@ const Production = () => {
   // Render Component
   return (
     <div className="production-container">
-      <div style={{ textAlign: "center", marginBottom: "10px" }}>
+    
         <DropdownButton
           align="end"
           title="Add Records"
@@ -476,7 +476,7 @@ const Production = () => {
           <Dropdown.Item onClick={() => handleOptionClick("sales")}>Sales</Dropdown.Item>
           <Dropdown.Item onClick={() => handleOptionClick("products")}>Products</Dropdown.Item>
         </DropdownButton>
-      </div>
+     
 
       <Modal show={showModal} onHide={handleCloseModal} centered style={{ marginTop: "100px" }}>
         <Modal.Header closeButton>

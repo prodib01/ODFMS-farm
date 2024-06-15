@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { FaEdit, FaEye, FaTrash } from "react-icons/fa";
 import Modal from "react-modal";
-import "../css/Breeding.css";
+import "../css/task.css";
 
 Modal.setAppElement("#root"); // Assuming "root" is your root element ID
 
@@ -22,7 +22,8 @@ const Task = () => {
     status: "",
     assigned_to: ""
   });
-
+   const [currentPage, setCurrentPage] = useState(1);
+   const [itemsPerPage] = useState(8);
   const [detailsModalIsOpen, setDetailsModalIsOpen] = useState(false);
   const [viewTask, setViewTask] = useState(null);
 
@@ -43,46 +44,50 @@ const Task = () => {
     fetchData();
   }, []);
 
-  useEffect(() => {
-    if (editTask) {
-      const formattedDate = new Date(editTask.due_date).toISOString().split("T")[0];
-      setNewTask({
-        id: editTask.id,
-        title: editTask.title,
-        description: editTask.description,
-        priority: editTask.priority,
-        due_date: formattedDate,
-        category: editTask.category,
-        status: editTask.status,
-        assigned_to: editTask.assigned_to
-      });
-    } else {
-      setNewTask({
-        title: "",
-        description: "",
-        priority: "Low",
-        due_date: "",
-        category: "",
-        status: "",
-        assigned_to: ""
-      });
-    }
-  }, [editTask]);
+ useEffect(() => {
+   if (editTask) {
+     const formattedDate = new Date(editTask.due_date).toISOString().split("T")[0];
+     setNewTask({
+       id: editTask.id,
+       title: editTask.title,
+       description: editTask.description,
+       priority: editTask.priority,
+       due_date: formattedDate,
+       category: editTask.category,
+       status: editTask.status,
+       assigned_to: editTask.assigned_to
+     });
+   } else {
+     setNewTask({
+       id: 0,
+       title: "",
+       description: "",
+       priority: "Low",
+       due_date: "",
+       category: "",
+       status: "",
+       assigned_to: ""
+     });
+   }
+ }, [editTask]);
 
-  const fetchTasks = async () => {
-    try {
-      const response = await fetch("http://localhost:8080/task/gettask", {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
-        }
-      });
-      const data = await response.json();
-      setTaskData(data.data);
-    } catch (error) {
-      console.error("Error fetching tasks:", error);
-    }
-  };
+
+const fetchTasks = async () => {
+  try {
+    const response = await fetch("http://localhost:8080/task/gettask", {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`
+      }
+    });
+    const data = await response.json();
+    setTaskData(data.data); // Assuming data.data contains the array of tasks
+  } catch (error) {
+    console.error("Error fetching tasks:", error);
+  }
+};
+
+
 
   const fetchUser = async () => {
     try {
@@ -125,49 +130,52 @@ const Task = () => {
     }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+ const handleSubmit = async (e) => {
+   e.preventDefault();
 
-    const priorityMapping = {
-      1: "Low",
-      2: "Medium",
-      3: "High"
-    };
+   const priorityMapping = {
+     1: "Low",
+     2: "Medium",
+     3: "High"
+   };
 
-    const taskToSubmit = {
-      ...newTask,
-      priority: priorityMapping[newTask.priority] || newTask.priority // Preserve the original priority if not changed
-    };
+   const taskToSubmit = {
+     ...newTask,
+     priority: priorityMapping[newTask.priority] || newTask.priority
+   };
 
-    try {
-      if (editTask) {
-        const response = await fetch(`http://localhost:8080/task/updatetask/${taskToSubmit.id}`, {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`
-          },
-          body: JSON.stringify(taskToSubmit)
-        });
-        const data = await response.json();
-        setTaskData((prev) => prev.map((task) => (task.id === editTask.id ? data.data : task)));
-      } else {
-        const response = await fetch("http://localhost:8080/task/addtask", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`
-          },
-          body: JSON.stringify(taskToSubmit)
-        });
-        const data = await response.json();
-        setTaskData((prev) => [...prev, data.data]);
-      }
-      closeModal();
-    } catch (error) {
-      console.error("Error adding/updating task:", error);
-    }
-  };
+   try {
+     if (editTask) {
+       const response = await fetch(`http://localhost:8080/task/updatetask/${taskToSubmit.id}`, {
+         method: "PATCH",
+         headers: {
+           "Content-Type": "application/json",
+           Authorization: `Bearer ${token}`
+         },
+         body: JSON.stringify(taskToSubmit)
+       });
+       const data = await response.json();
+       setTaskData((prev) => prev.map((task) => (task.id === editTask.id ? data.data : task)));
+     } else {
+       const response = await fetch("http://localhost:8080/task/addtask", {
+         method: "POST",
+         headers: {
+           "Content-Type": "application/json",
+           Authorization: `Bearer ${token}`
+         },
+         body: JSON.stringify(taskToSubmit)
+       });
+       const data = await response.json();
+       setTaskData((prev) => [...prev, data.data]);
+     }
+     closeModal();
+     window.location.reload(); // <-- Refresh the page
+   } catch (error) {
+     console.error("Error adding/updating task:", error);
+   }
+ };
+
+
 
   const handleViewTask = (task) => {
     setViewTask({
@@ -195,33 +203,39 @@ const Task = () => {
 const handleDelete = async (taskToDelete) => {
   const confirmDelete = window.confirm(
     "Are you sure you want to delete this record from the storage?"
-    );
-    if (confirmDelete) {
-      try {
-        const response = await fetch(
-          `http://localhost:8080/task/deletetask/${taskToDelete.id}`,
-          {
-            method: "DELETE",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`
-            }
-          }
-        );
-        if (!response.ok) {
-          throw new Error("Error deleting task");
+  );
+  if (confirmDelete) {
+    try {
+      const response = await fetch(`http://localhost:8080/task/deletetask/${taskToDelete.id}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
         }
-        setTaskData((prevRecords) =>
-          prevRecords.filter((rec) => rec.id !== taskToDelete.id)
-      );
+      });
+      if (!response.ok) {
+        throw new Error("Error deleting task");
+      }
+      setTaskData((prevRecords) => prevRecords.filter((rec) => rec.id !== taskToDelete.id));
+      window.location.reload(); // <-- Refresh the page
     } catch (error) {
       console.error("Error deleting task:", error);
     }
   }
 };
 
+    const totalPages = Math.ceil(taskData.length / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const currenttaskData = taskData.slice(startIndex, startIndex + itemsPerPage);
+
+    const handlePageChange = (page) => {
+      if (page > 0 && page <= totalPages) {
+        setCurrentPage(page);
+      }
+    };
+
   return (
-    <div>
+    <div task-container>
       <div
         style={{
           display: "flex",
@@ -241,44 +255,55 @@ const handleDelete = async (taskToDelete) => {
           Add Task
         </button>
       </div>
-      <h1>Task Records</h1>
-      <table>
-        <thead>
-          <tr>
-            <th>Title</th>
-            <th>Category</th>
-            <th>Priority</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {taskData &&
-            taskData.map((task) => (
-              <tr key={task.id}>
-                <td>{task.title}</td>
-                <td>{task.category}</td>
-                <td>{task.priority}</td>
-                <td>{task.status}</td>
-                <td>
-                  <button onClick={() => handleViewTask(task)}>
-                    <FaEye />
-                  </button>
-                  <button
-                    onClick={() => {
-                      setEditTask(task);
-                      openModal();
-                    }}>
-                    <FaEdit />
-                  </button>
-                  <button onClick={() => handleDelete(task)}>
-                    <FaTrash />
-                  </button>
-                </td>
+      <div className="table-wrapper">
+        <table className="task-table">
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Category</th>
+              <th>Priority</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {taskData.length > 0 ? (
+              currenttaskData.map((task) => {
+                if (!task || !task.title || !task.id) return null; // <-- Check for task existence and title
+
+                return (
+                  <tr key={task.id}>
+                    <td>{task.title}</td>
+                    <td>{task.category}</td>
+                    <td>{task.priority}</td>
+                    <td>{task.status}</td>
+                    <td>
+                      <button className="action-btn view-btn" onClick={() => handleViewTask(task)}>
+                        <FaEye />
+                      </button>
+                      <button
+                        className="action-btn edit-btn"
+                        onClick={() => {
+                          setEditTask(task);
+                          openModal();
+                        }}>
+                        <FaEdit />
+                      </button>
+                      <button className="action-btn delete-btn" onClick={() => handleDelete(task)}>
+                        <FaTrash />
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })
+            ) : (
+              <tr>
+                <td colSpan="5">No tasks available</td>
               </tr>
-            ))}
-        </tbody>
-      </table>
+            )}
+          </tbody>
+        </table>
+      </div>
 
       {/* Modal for Adding/Editing Task */}
       <Modal
@@ -545,6 +570,16 @@ const handleDelete = async (taskToDelete) => {
           </div>
         </Modal>
       )}
+      <div className="pagination">
+        {Array.from({ length: totalPages }, (_, index) => (
+          <button
+            key={index + 1}
+            onClick={() => handlePageChange(index + 1)}
+            className={`page-btn ${index + 1 === currentPage ? "active" : ""}`}>
+            {index + 1}
+          </button>
+        ))}
+      </div>
     </div>
   );
 };
