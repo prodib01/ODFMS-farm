@@ -1,56 +1,66 @@
-
-.event-date {
-  background-color: #ffcc00; /* Highlight color for event dates */
-  color: #000; /* Text color for better contrast */
-}
-.calendar {
-  display: flex;
+.calendar-container {
+    width: 100%;
+  padding: 20px;
+  box-sizing: border-box;
+  overflow-x: auto;
+    display: flex;
   flex-direction: column;
+  align-items: center;
 }
 
-.first {
-  display: flex;
-  flex-direction: row;
-  border: 1px solid black;
+.calendar {
+  width: 1600px;
+  margin-bottom: 20px;
+  align-items: center;
 }
 
-.cal {
-  border: 1px solid green;
-}
-
-.upcoming-events {
-  border: 1px solid red;
-}
-
-.second {
-  border: 1px solid blue;
+.rbc-calendar{
+  align-items: center;
 }
 
 .add-btn-container {
-  display: flex;
-  justify-content: flex-end; /* Push button to the right */
-  margin-bottom: 10px;
+   text-align: right;
+  margin-bottom: 20px;
+}
+
+@media (max-width: 768px) {
+  .add-btn-container {
+    text-align: center;
+    margin-bottom: 10px;
+  }
 }
 
 .add-btn {
-  padding: 8px 16px;
+  padding: 10px 20px;
   background-color: #007bff;
-  color: #fff;
+  color: white;
   border: none;
   border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
 }
 
+@media (max-width: 768px) {
+  .add-btn {
+    width: 100%;
+    font-size: 16px;
+    padding: 12px;
+  }
+}
+
+.add-btn:hover {
+  background-color: #215b8e;
+}
 
 table {
   width: 100%;
   border-collapse: collapse;
-  margin-bottom: 10px;
+  margin-top: 10px;
 }
 
-th,
-td {
+th, td {
   border: 1px solid #ddd;
-  padding: 6px;
+  padding: 8px;
   text-align: left;
 }
 
@@ -62,47 +72,20 @@ tr:nth-child(even) {
   background-color: #f2f2f2;
 }
 
-.actions button {
-  margin-right: 5px;
-  padding: 5px 10px;
-  background-color: #007bff;
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-}
-
-.actions button:hover {
-  background-color: #0056b3;
-}
-
-/* Calendar.css */
-
-/* Pagination styles */
-.pagination {
-  display: flex;
-  justify-content: center;
-  margin-top: 20px;
-}
-
-.pagination .btn {
-  background-color: #f1f1f1;
-  border: 1px solid #ccc;
-  color: #333;
-  padding: 6px 16px;
-  margin: 0 5px;
-  cursor: pointer;
-  border-radius: 18px;
-  transition: background-color 0.3s;
-}
-
-.pagination .btn:hover {
+tr:hover {
   background-color: #ddd;
 }
 
-.pagination .btn.active {
-  background-color: #007bff;
-  color: #fff;
-  border-color: #007bff;
+button {
+  background-color: #ddd;
+  color: #333;
+  border: none;
+  padding: 6px 12px;
+  cursor: pointer;
+  border-radius: 4px;
+  margin-right: 4px;
 }
 
+button:hover {
+  background-color: #ccc;
+}

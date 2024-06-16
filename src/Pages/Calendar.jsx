@@ -20,6 +20,36 @@ const Weather = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const token = localStorage.getItem("token");
 
+  const fetchBreedingData = async () => {
+    try {
+      const response = await fetch("http://localhost:8080/breeding/getbreeding", {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        }
+      });
+      if (!response.ok) {
+        throw new Error("Failed to fetch breeding data");
+      }
+      const data = await response.json();
+      const formattedEvents = data.data.map((item) => ({
+        id: item.id,
+        title: `Due Date: ${item.cow_tag}`,
+        date: item.due_date, // Assuming due_date is in ISO format or parseable by moment
+        description: `Cow Tag: ${item.cow_tag}`
+      }));
+      setEventData(formattedEvents);
+    } catch (error) {
+      console.error("Error fetching breeding data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchBreedingData();
+  }, []); // Fetch breeding data on component mount
+
   const fetchEvents = async () => {
     try {
       const response = await fetch("http://localhost:8080/calendar/getevents", {
@@ -43,23 +73,23 @@ const Weather = () => {
     fetchData();
   }, []);
 
-  const handleDateSelect = (slotInfo) => {
-    const selectedDate = moment(slotInfo.start).format("YYYY-MM-DD");
-    const eventsForDate = eventData.filter(
-      (event) => moment(event.date).format("YYYY-MM-DD") === selectedDate
-    );
+    const handleDateSelect = (slotInfo) => {
+      const selectedDate = moment(slotInfo.start).format("YYYY-MM-DD");
+      const eventsForDate = eventData.filter(
+        (event) => moment(event.date).format("YYYY-MM-DD") === selectedDate
+      );
 
-    if (eventsForDate.length === 0) {
-      const confirmAddEvent = window.confirm("Do you want to add an event for this date?");
-      if (confirmAddEvent) {
-        setShowAddModal(true);
-        setCurrentEvent({ date: selectedDate }); // Pre-fill the date
+      if (eventsForDate.length === 0) {
+        const confirmAddEvent = window.confirm("Do you want to add an event for this date?");
+        if (confirmAddEvent) {
+          setShowAddModal(true);
+          setCurrentEvent({ date: selectedDate }); // Pre-fill the date
+        }
+      } else {
+        setSelectedDateEvents(eventsForDate);
+        setShowEventModal(true);
       }
-    } else {
-      setSelectedDateEvents(eventsForDate);
-      setShowEventModal(true);
-    }
-  };
+    };
 
   const handleEventClick = (event) => {
     const selectedDate = moment(event.date).format("YYYY-MM-DD");
@@ -170,17 +200,17 @@ const Weather = () => {
     }
   };
 
-  const events = eventData.map((event) => ({
-    ...event,
-    start: new Date(event.date),
-    end: new Date(event.date)
-  }));
+    const events = eventData.map((event) => ({
+      ...event,
+      start: new Date(event.date),
+      end: new Date(event.date)
+    }));
 
-  const eventStyleGetter = () => ({
-    style: {
-      backgroundColor: "#3174ad"
-    }
-  });
+    const eventStyleGetter = () => ({
+      style: {
+        backgroundColor: "#3174ad"
+      }
+    });
 
   const modalStyles = {
     content: {
